@@ -31,3 +31,7 @@ yarn-error.log*
 
 #IDEA folder
 /.idea
+
+# firebase/github
+.firebaserc
+/.github
