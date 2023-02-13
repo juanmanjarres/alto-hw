@@ -1,21 +1,20 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {
-    Button,
-    IconButton,
+    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormLabel,
+    IconButton, InputLabel,
     Paper,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow, TextField
 } from "@mui/material";
 import {Add, CalendarMonth, Delete, Edit} from "@mui/icons-material";
 import {firestore} from "../firebase/clientApp";
 import {collection,QueryDocumentSnapshot,DocumentData,query,where,limit,getDocs} from "@firebase/firestore";
 import {useEffect, useState} from "react";
-
 
 function deleteEntry(){
 
@@ -23,6 +22,87 @@ function deleteEntry(){
 
 function editEntry(){
 
+}
+
+function AddEntryDiag(fsCollection){
+    const [open, setOpen] = useState(false);
+    const [booking, setBooking] = useState({});
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleAdd = () => {
+
+    };
+
+    return (
+        <div>
+            <Button variant="contained" onClick={handleClickOpen}>
+                <Add sx={{ mr:1 }}></Add>
+                Add new booking
+            </Button>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>New Booking</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Create a new booking to manage here, and add it to the database
+                    </DialogContentText>
+                    <form onSubmit={handleAdd}>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="id"
+                        label="ID"
+                        type="number"
+                        fullWidth
+                        required
+                    />
+                    <TextField
+                        margin="dense"
+                        id="seeker"
+                        label="Seeker"
+                        type="text"
+                        fullWidth
+                        required
+                    />
+                    <TextField
+                        margin="dense"
+                        id="giver"
+                        label="Giver"
+                        type="text"
+                        fullWidth
+                        required
+                    />
+                    <TextField
+                        margin="dense"
+                        id="date"
+                        label="Date"
+                        type="date"
+                        fullWidth
+                        required
+                    />
+                    <TextField
+                        margin="dense"
+                        id="totalamt"
+                        label="Total Amount"
+                        type="number"
+                        fullWidth
+                        required
+                    />
+                    </form>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button type="submit">Add</Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    )
 }
 
 export default function Home() {
@@ -41,7 +121,7 @@ export default function Home() {
     }
 
     useEffect(() => {
-        getBookings();
+        //getBookings();
     })
 
   return (
@@ -59,9 +139,7 @@ export default function Home() {
         <p className={styles.description}>
           Add, edit or delete bookings
         </p>
-          <Button variant="contained">
-              <Add sx={{ mr:1 }}></Add>   Add new booking
-          </Button>
+          <AddEntryDiag bookingsCollection/>
           <br></br>
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
