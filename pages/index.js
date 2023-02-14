@@ -20,20 +20,17 @@ async function deleteEntry(id) {
     await deleteDoc(doc(firestore, 'bookings', id));
 }
 
-function editEntry() {
-}
-
-function AddEntryDiag() {
+function BookingDiag(refresh, edit) {
     const [open, setOpen] = useState(false);
     const [booking, setBooking] = useState({
-    data: {
-        id: null,
-        seeker: null,
-        giver: null,
-        date: null,
-        totalamt: null,
-    },
-    id: null
+        data: {
+            id: null,
+            seeker: null,
+            giver: null,
+            date: null,
+            totalamt: null,
+        },
+        id: null
     });
 
     const bookingsCollection = collection(firestore, 'bookings')
@@ -42,8 +39,9 @@ function AddEntryDiag() {
         setOpen(true);
     };
 
-    const handleClose = () => {
+    const handleClose = async () => {
         setOpen(false);
+        await refresh.refresh();
     };
 
     const handleAdd = event => {
@@ -52,6 +50,7 @@ function AddEntryDiag() {
     };
 
     const addToDB = async () => {
+        console.log("Obj before DB add: " + JSON.stringify(booking))
         try {
             const docRef = await addDoc(bookingsCollection, {
                 id: booking.data.id,
@@ -64,7 +63,7 @@ function AddEntryDiag() {
             console.log("Added to database successfully with ID " + JSON.stringify(docRef.id))
             setBooking({
                 ...booking,
-                docRefId: docRef.id
+                id: docRef.id
             });
         } catch (e) {
             console.error("Some error occurred while adding to DB: " + e);
@@ -75,10 +74,15 @@ function AddEntryDiag() {
 
     return (
         <div>
-            <Button variant="contained" onClick={handleClickOpen}>
-                <Add sx={{mr: 1}}></Add>
-                Add new booking
-            </Button>
+            {edit ?
+                (<IconButton aria-label="edit" onClick={handleClickOpen}>
+                    <Edit/>
+                </IconButton>) :
+                (<Button variant="contained" onClick={handleClickOpen}>
+                    <Add sx={{mr: 1}}></Add>
+                    Add new booking
+                </Button>)
+            }
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>New Booking</DialogTitle>
                 <form onSubmit={handleAdd}>
@@ -97,7 +101,10 @@ function AddEntryDiag() {
                             onChange={e => {
                                 setBooking({
                                     ...booking,
-                                    id: parseInt(e.target.value)
+                                    data: {
+                                        ...booking.data,
+                                        id: parseInt(e.target.value)
+                                    }
                                 });
                             }}
                         />
@@ -111,7 +118,10 @@ function AddEntryDiag() {
                             onChange={e => {
                                 setBooking({
                                     ...booking,
-                                    seeker: e.target.value
+                                    data: {
+                                        ...booking.data,
+                                        seeker: e.target.value
+                                    }
                                 });
                             }}
                         />
@@ -125,7 +135,10 @@ function AddEntryDiag() {
                             onChange={e => {
                                 setBooking({
                                     ...booking,
-                                    giver: e.target.value
+                                    data: {
+                                        ...booking.data,
+                                        giver: e.target.value
+                                    }
                                 });
                             }}
                         />
@@ -139,7 +152,10 @@ function AddEntryDiag() {
                             onChange={e => {
                                 setBooking({
                                     ...booking,
-                                    date: new Date(e.target.value).toDateString()
+                                    data: {
+                                        ...booking.data,
+                                        date: new Date(e.target.value).toDateString()
+                                    }
                                 });
                             }}
                         />
@@ -155,7 +171,10 @@ function AddEntryDiag() {
                             onChange={e => {
                                 setBooking({
                                     ...booking,
-                                    totalamt: parseFloat(e.target.value)
+                                    data: {
+                                        ...booking.data,
+                                        totalamt: parseFloat(e.target.value)
+                                    }
                                 });
                             }}
                         />
@@ -183,132 +202,131 @@ export default function Home() {
         bookingsQuery.forEach((doc) => {
             res.push({data: doc.data(), id: doc.id})
         })
-            console.log(JSON.stringify(res[0]))
-            setBookings(res)
-        }
-
-        useEffect(() => {
-            getBookings();
-        }, [])
-
-        return (
-            <div className={styles.container}>
-                <Head>
-                    <title>Bookings</title>
-                    <link rel="icon" href="/favicon.ico"/>
-                </Head>
-
-                <main>
-                    <p><CalendarMonth></CalendarMonth></p>
-                    <h1 className={styles.title}>
-                        Bookings!
-                    </h1>
-                    <p className={styles.description}>
-                        Add, edit or delete bookings
-                    </p>
-                    <AddEntryDiag fsCollection={bookingsCollection}/>
-                    <br></br>
-                    <TableContainer component={Paper}>
-                        <Table sx={{minWidth: 650}} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell align={"right"}>Seeker</TableCell>
-                                    <TableCell align={"right"}>Giver</TableCell>
-                                    <TableCell align={"right"}>Date</TableCell>
-                                    <TableCell align={"right"}>Total Amount</TableCell>
-                                    <TableCell align={"right"}>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {
-                                    bookings.map((bk) => (
-                                        <TableRow
-                                            key={bk.data.id}
-                                            sx={{'&:last-child td, &:last-child th': {border: 0}}}>
-                                            <TableCell component="th" scope="row">
-                                                {bk.data.id}
-                                            </TableCell>
-                                            <TableCell align={"right"}>{bk.data.seeker}</TableCell>
-                                            <TableCell align={"right"}>{bk.data.giver}</TableCell>
-                                            <TableCell align={"right"}>{bk.data.date}</TableCell>
-                                            <TableCell align={"right"}>{bk.data.totalamt}</TableCell>
-                                            <TableCell align={"right"}>
-                                                <IconButton aria-label="edit" onClick={editEntry}>
-                                                    <Edit/>
-                                                </IconButton>
-                                                <IconButton aria-label="delete" onClick={() => {
-                                                    deleteEntry(bk.id);
-                                                    getBookings();
-                                                }}>
-                                                    <Delete/>
-                                                </IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                }
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </main>
-
-                <footer>
-                    <a
-                        href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Powered by{' '}
-                        <img src="/vercel.svg" alt="Vercel" className={styles.logo}/>
-                    </a>
-                </footer>
-
-                <style jsx>{`
-                  main {
-                    padding: 5rem 0;
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                  }
-
-                  footer {
-                    width: 100%;
-                    height: 100px;
-                    border-top: 1px solid #eaeaea;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                  }
-
-                  footer img {
-                    margin-left: 0.5rem;
-                  }
-
-                  footer a {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    text-decoration: none;
-                    color: inherit;
-                  }
-                `}</style>
-
-                <style jsx global>{`
-                  html,
-                  body {
-                    padding: 0;
-                    margin: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-                    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-                    sans-serif;
-                  }
-
-                  * {
-                    box-sizing: border-box;
-                  }
-                `}</style>
-            </div>
-        )
+        console.log(JSON.stringify(res[0]))
+        setBookings(res)
     }
+
+    useEffect(() => {
+        getBookings();
+    }, [])
+
+    return (
+        <div className={styles.container}>
+            <Head>
+                <title>Bookings</title>
+                <link rel="icon" href="/favicon.ico"/>
+            </Head>
+
+            <main>
+                <p><CalendarMonth></CalendarMonth></p>
+                <h1 className={styles.title}>
+                    Bookings!
+                </h1>
+                <p className={styles.description}>
+                    Add, edit or delete bookings
+                </p>
+                <BookingDiag refresh={getBookings}/>
+                <br></br>
+                <TableContainer component={Paper}>
+                    <Table sx={{minWidth: 650}} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>ID</TableCell>
+                                <TableCell align={"right"}>Seeker</TableCell>
+                                <TableCell align={"right"}>Giver</TableCell>
+                                <TableCell align={"right"}>Date</TableCell>
+                                <TableCell align={"right"}>Total Amount</TableCell>
+                                <TableCell align={"right"}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {
+                                bookings.map((bk) => (
+                                    <TableRow
+                                        key={bk.id}
+                                        sx={{'&:last-child td, &:last-child th': {border: 0}}}>
+                                        <TableCell component="th" scope="row">
+                                            {bk.data.id}
+                                        </TableCell>
+                                        <TableCell align={"right"}>{bk.data.seeker}</TableCell>
+                                        <TableCell align={"right"}>{bk.data.giver}</TableCell>
+                                        <TableCell align={"right"}>{bk.data.date}</TableCell>
+                                        <TableCell align={"right"}>{bk.data.totalamt}</TableCell>
+                                        <TableCell align={"right"}>
+                                            <IconButton aria-label="edit" onClick={editEntry}>
+                                                <Edit/>
+                                            </IconButton>
+                                            <IconButton aria-label="delete" onClick={async () => {
+                                                await deleteEntry(bk.id).then(() => getBookings());
+                                            }}>
+                                                <Delete/>
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            }
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </main>
+
+            <footer>
+                <a
+                    href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Powered by{' '}
+                    <img src="/vercel.svg" alt="Vercel" className={styles.logo}/>
+                </a>
+            </footer>
+
+            <style jsx>{`
+              main {
+                padding: 5rem 0;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+              }
+
+              footer {
+                width: 100%;
+                height: 100px;
+                border-top: 1px solid #eaeaea;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+
+              footer img {
+                margin-left: 0.5rem;
+              }
+
+              footer a {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-decoration: none;
+                color: inherit;
+              }
+            `}</style>
+
+            <style jsx global>{`
+              html,
+              body {
+                padding: 0;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+                Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+                sans-serif;
+              }
+
+              * {
+                box-sizing: border-box;
+              }
+            `}</style>
+        </div>
+    )
+}
