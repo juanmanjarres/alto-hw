@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {
-    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid,
     IconButton,
     Paper,
     Table,
@@ -20,7 +20,7 @@ async function deleteEntry(id) {
     await deleteDoc(doc(firestore, 'bookings', id));
 }
 
-function BookingDiag(refresh, edit) {
+function BookingDiag(args) {
     const [open, setOpen] = useState(false);
     const [booking, setBooking] = useState({
         data: {
@@ -41,7 +41,7 @@ function BookingDiag(refresh, edit) {
 
     const handleClose = async () => {
         setOpen(false);
-        await refresh.refresh();
+        await args.refresh();
     };
 
     const handleAdd = event => {
@@ -74,7 +74,7 @@ function BookingDiag(refresh, edit) {
 
     return (
         <div>
-            {edit ?
+            {args.edit ?
                 (<IconButton aria-label="edit" onClick={handleClickOpen}>
                     <Edit/>
                 </IconButton>) :
@@ -225,7 +225,7 @@ export default function Home() {
                 <p className={styles.description}>
                     Add, edit or delete bookings
                 </p>
-                <BookingDiag refresh={getBookings}/>
+                <BookingDiag refresh={getBookings} edit={false}/>
                 <br></br>
                 <TableContainer component={Paper}>
                     <Table sx={{minWidth: 650}} aria-label="simple table">
@@ -253,14 +253,19 @@ export default function Home() {
                                         <TableCell align={"right"}>{bk.data.date}</TableCell>
                                         <TableCell align={"right"}>{bk.data.totalamt}</TableCell>
                                         <TableCell align={"right"}>
-                                            <IconButton aria-label="edit" onClick={editEntry}>
-                                                <Edit/>
-                                            </IconButton>
-                                            <IconButton aria-label="delete" onClick={async () => {
-                                                await deleteEntry(bk.id).then(() => getBookings());
-                                            }}>
-                                                <Delete/>
-                                            </IconButton>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs ={4}/>
+                                                <Grid item xs={4}>
+                                                    <BookingDiag refresh={getBookings} edit={true}/>
+                                                </Grid>
+                                                <Grid item xs={4}>
+                                                    <IconButton aria-label="delete" onClick={async () => {
+                                                        await deleteEntry(bk.id).then(() => getBookings());
+                                                    }}>
+                                                        <Delete/>
+                                                    </IconButton>
+                                                </Grid>
+                                            </Grid>
                                         </TableCell>
                                     </TableRow>
                                 ))
