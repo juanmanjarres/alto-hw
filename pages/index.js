@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {
-    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormLabel,
-    IconButton, InputLabel,
+    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+    IconButton,
     Paper,
     Table,
     TableBody,
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import {Add, CalendarMonth, Delete, Edit} from "@mui/icons-material";
 import {firestore} from "../firebase/clientApp";
-import {collection,QueryDocumentSnapshot,DocumentData,query,where,limit,getDocs} from "@firebase/firestore";
+import {collection,addDoc, getDocs} from "@firebase/firestore";
 import {useEffect, useState} from "react";
 
 function deleteEntry(){
@@ -24,9 +24,18 @@ function editEntry(){
 
 }
 
-function AddEntryDiag(fsCollection){
+function AddEntryDiag(){
     const [open, setOpen] = useState(false);
-    const [booking, setBooking] = useState({});
+    const [error, setError] = useState("")
+    const [booking, setBooking] = useState({
+        id: null,
+        seeker: null,
+        giver: null,
+        date: null,
+        totalamt: null
+    });
+
+    const bookingsCollection = collection(firestore, 'bookings')
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -36,8 +45,30 @@ function AddEntryDiag(fsCollection){
         setOpen(false);
     };
 
-    const handleAdd = () => {
+    const handleAdd = event => {
+        event.preventDefault();
+        const anyEmptyFields = Object.values(booking).every(x => x === null || x === ' ');
+        if(anyEmptyFields){
+            return setError("Please fill all required fields");
+        }
+        addToDB().then(() => handleClose());
+    };
 
+    const addToDB = async () => {
+        try{
+            const docRef = await addDoc(bookingsCollection, {
+                id: booking.id,
+                seeker: booking.seeker,
+                giver: booking.giver,
+                date: booking.date,
+                totalamt: booking.totalamt
+            });
+            console.log("Added to database successfully with ID " + JSON.stringify(docRef.id))
+        } catch(e){
+            console.error("Some error occurred while adding to DB: " + e);
+            console.log("The booking to add: " + JSON.stringify(booking))
+            console.log("The collection: " + JSON.stringify(bookingsCollection))
+        }
     };
 
     return (
@@ -48,11 +79,16 @@ function AddEntryDiag(fsCollection){
             </Button>
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>New Booking</DialogTitle>
+                <form onSubmit={handleAdd}>
                 <DialogContent>
                     <DialogContentText>
                         Create a new booking to manage here, and add it to the database
                     </DialogContentText>
-                    <form onSubmit={handleAdd}>
+                    {
+                        error ? (
+                            <div><p>{error}</p></div>
+                        ) : null
+                    }
                     <TextField
                         autoFocus
                         margin="dense"
@@ -61,6 +97,12 @@ function AddEntryDiag(fsCollection){
                         type="number"
                         fullWidth
                         required
+                        onChange={e => {
+                            setBooking({
+                                ...booking,
+                                id: parseInt(e.target.value)
+                                });
+                        }}
                     />
                     <TextField
                         margin="dense"
@@ -69,6 +111,12 @@ function AddEntryDiag(fsCollection){
                         type="text"
                         fullWidth
                         required
+                        onChange={e => {
+                            setBooking({
+                                ...booking,
+                                seeker: e.target.value
+                            });
+                        }}
                     />
                     <TextField
                         margin="dense"
@@ -77,6 +125,12 @@ function AddEntryDiag(fsCollection){
                         type="text"
                         fullWidth
                         required
+                        onChange={e => {
+                            setBooking({
+                                ...booking,
+                                giver: e.target.value
+                            });
+                        }}
                     />
                     <TextField
                         margin="dense"
@@ -85,6 +139,12 @@ function AddEntryDiag(fsCollection){
                         type="date"
                         fullWidth
                         required
+                        onChange={e => {
+                            setBooking({
+                                ...booking,
+                                date: new Date(e.target.value).toDateString()
+                            });
+                        }}
                     />
                     <TextField
                         margin="dense"
@@ -93,13 +153,22 @@ function AddEntryDiag(fsCollection){
                         type="number"
                         fullWidth
                         required
+                        // Had to do it like this, apparently the built-in step isn't working?
+                        InputProps={{inputProps: {step: 'any'}}}
+                        onChange={e => {
+                            setBooking({
+                                ...booking,
+                                totalamt: parseFloat(e.target.value)
+                            });
+                        }}
                     />
-                    </form>
+
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button type="submit">Add</Button>
                 </DialogActions>
+            </form>
             </Dialog>
         </div>
     )
@@ -121,8 +190,8 @@ export default function Home() {
     }
 
     useEffect(() => {
-        //getBookings();
-    })
+        getBookings();
+    }, [])
 
   return (
     <div className={styles.container}>
@@ -139,7 +208,7 @@ export default function Home() {
         <p className={styles.description}>
           Add, edit or delete bookings
         </p>
-          <AddEntryDiag bookingsCollection/>
+          <AddEntryDiag fsCollection={bookingsCollection}/>
           <br></br>
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
