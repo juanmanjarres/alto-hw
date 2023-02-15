@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {
+    AppBar,
+    Box,
     Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid,
     IconButton,
     Paper,
@@ -9,9 +11,15 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow, TextField
+    TableRow, TextField, Toolbar, Typography
 } from "@mui/material";
-import {Add, CalendarMonth, Delete, Edit} from "@mui/icons-material";
+import {
+    Add,
+    Delete,
+    Edit,
+    Upcoming
+} from "@mui/icons-material";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {firestore} from "../firebase/clientApp";
 import {collection, doc, addDoc, getDocs, deleteDoc, updateDoc} from "@firebase/firestore";
 import {useEffect, useState} from "react";
@@ -22,6 +30,7 @@ async function deleteEntry(id) {
 
 function BookingDiag(args) {
     const [open, setOpen] = useState(false);
+
 
     const [booking, setBooking] = args.edit ? useState({
        data:{
@@ -44,6 +53,18 @@ function BookingDiag(args) {
     });
 
     const bookingsCollection = collection(firestore, 'bookings')
+
+    const theme = createTheme({
+        palette: {
+            primary: {
+                //Light blue
+                main: "#008BFF"
+            },
+            secondary: {
+                main: "#FFFFFF"
+            }
+        }
+    });
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -104,11 +125,12 @@ function BookingDiag(args) {
 
     return (
         <div>
+            <ThemeProvider theme={theme}>
             {args.edit ?
                 (<IconButton aria-label="edit" onClick={handleClickOpen}>
                     <Edit/>
                 </IconButton>) :
-                (<Button variant="contained" onClick={handleClickOpen}>
+                (<Button sx={{ mr: 4 }} variant="contained" onClick={handleClickOpen}>
                     <Add sx={{mr: 1}}></Add>
                     Add new booking
                 </Button>)
@@ -222,6 +244,7 @@ function BookingDiag(args) {
                     </DialogActions>
                 </form>
             </Dialog>
+            </ThemeProvider>
         </div>
     )
 }
@@ -231,6 +254,18 @@ export default function Home() {
     const [bookings, setBookings] = useState([])
 
     const bookingsCollection = collection(firestore, 'bookings')
+
+    const theme = createTheme({
+        palette: {
+            primary: {
+                main: "#FFFFFF"
+            },
+            secondary: {
+                // Light blue
+                main: "#008BFF"
+            }
+        }
+    });
 
     const getBookings = async () => {
         const bookingsQuery = await getDocs(bookingsCollection)
@@ -252,19 +287,27 @@ export default function Home() {
                 <title>Bookings</title>
                 <link rel="icon" href="/favicon.ico"/>
             </Head>
-
+            <header>
+                <ThemeProvider theme={theme}>
+                    <Box fontWeight="fontWeightBold" sx = {{ flexGrow: 1 }}>
+                        <AppBar position="static">
+                            <Toolbar>
+                                <Upcoming fontSize="large" color="secondary" sx={{ mr: 2 }}/>
+                                <Typography color="black" variant="h5" component="div" sx ={{ flexGrow :  1 }}>
+                                    Bookings!
+                                </Typography>
+                                <BookingDiag refresh={getBookings} edit={false}/>
+                                <Button color="secondary">Login</Button>
+                                <Button color="secondary">Sign Up</Button>
+                            </Toolbar>
+                        </AppBar>
+                    </Box>
+                </ThemeProvider>
+            </header>
             <main>
-                <p><CalendarMonth></CalendarMonth></p>
-                <h1 className={styles.title}>
-                    Bookings!
-                </h1>
-                <p className={styles.description}>
-                    Add, edit or delete bookings
-                </p>
-                <BookingDiag refresh={getBookings} edit={false}/>
-                <br></br>
+                <Grid item xs={12}>
                 <TableContainer component={Paper}>
-                    <Table sx={{minWidth: 650}} aria-label="simple table">
+                    <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
                                 <TableCell>ID</TableCell>
@@ -309,6 +352,7 @@ export default function Home() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                </Grid>
             </main>
 
             <footer>
@@ -324,12 +368,16 @@ export default function Home() {
 
             <style jsx>{`
               main {
-                padding: 5rem 0;
+                padding: 4rem 0;
                 flex: 1;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+              }
+              
+              header{
+                width: 100%;
               }
 
               footer {
