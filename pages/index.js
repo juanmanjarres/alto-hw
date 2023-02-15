@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import {Add, CalendarMonth, Delete, Edit} from "@mui/icons-material";
 import {firestore} from "../firebase/clientApp";
-import {collection, doc, addDoc, getDocs, deleteDoc} from "@firebase/firestore";
+import {collection, doc, addDoc, getDocs, deleteDoc, updateDoc} from "@firebase/firestore";
 import {useEffect, useState} from "react";
 
 async function deleteEntry(id) {
@@ -56,11 +56,29 @@ function BookingDiag(args) {
 
     const handleEdit = event => {
         event.preventDefault();
+        editToDB().then(() => handleClose());
     }
     const handleAdd = event => {
         event.preventDefault();
         addToDB().then(() => handleClose());
     };
+
+    const editToDB = async () => {
+        console.log("Obj before DB edit: " + JSON.stringify(booking))
+        try{
+            await updateDoc(doc(firestore, 'bookings', booking.id),{
+                id: booking.data.id,
+                seeker: booking.data.seeker,
+                giver: booking.data.giver,
+                date: booking.data.date,
+                totalamt: booking.data.totalamt
+            });
+            console.log("Edited entry successfully")
+        } catch (e){
+            console.error("An error occurred while editing to DB: " + e);
+            console.log("The booking to add: " + JSON.stringify(booking));
+        }
+    }
 
     const addToDB = async () => {
         console.log("Obj before DB add: " + JSON.stringify(booking))
@@ -81,7 +99,6 @@ function BookingDiag(args) {
         } catch (e) {
             console.error("Some error occurred while adding to DB: " + e);
             console.log("The booking to add: " + JSON.stringify(booking))
-            console.log("The collection: " + JSON.stringify(bookingsCollection))
         }
     };
 
