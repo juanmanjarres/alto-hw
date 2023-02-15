@@ -2,7 +2,7 @@ import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {
     AppBar,
-    Box,
+    Box, Button,
     Grid,
     IconButton,
     Paper,
@@ -18,11 +18,12 @@ import {
     Upcoming
 } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import {firestore} from "../firebase/clientApp";
+import {firestore, auth} from "../firebase/clientApp";
 import {BookingDiag} from "../components/bookingDialog";
 import {collection, doc, getDocs, deleteDoc} from "@firebase/firestore";
 import {useEffect, useState} from "react";
 import {LoginDiag, SignupDiag} from "../components/authDialogs";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 async function deleteEntry(id) {
     await deleteDoc(doc(firestore, 'bookings', id));
@@ -31,6 +32,8 @@ async function deleteEntry(id) {
 export default function Home() {
 
     const [bookings, setBookings] = useState([])
+    const [user, setUser] = useState({});
+    const [loggedIn, setLoggedIn] = useState(false);
 
     const bookingsCollection = collection(firestore, 'bookings')
 
@@ -56,8 +59,29 @@ export default function Home() {
         setBookings(res)
     }
 
+    const handleSignOut = () => {
+        signOut(auth).then(() => {
+            // Sign-out successful.
+            console.log("Signed out successfully")
+        }).catch((error) => {
+            console.log("Error while logging out: " + error)
+        });
+    }
+
     useEffect(() => {
         getBookings();
+        onAuthStateChanged(auth, (returnedUser) => {
+            if(returnedUser){
+                //User is signed in
+                setUser(returnedUser)
+                setLoggedIn(true)
+                console.log("uid: " + JSON.stringify(returnedUser.uid))
+            } else {
+                setUser({})
+                setLoggedIn(false)
+                console.log("User signed out")
+            }
+        })
     }, [])
 
     return (
@@ -76,8 +100,15 @@ export default function Home() {
                                     Bookings!
                                 </Typography>
                                 <BookingDiag refresh={getBookings} edit={false}/>
-                                <LoginDiag />
-                                <SignupDiag />
+                                {
+                                    loggedIn ?
+                                        <Button color="secondary" onClick={handleSignOut}>Sign Out</Button> :
+                                            <div style={{ display:"flex" }}>
+                                                <LoginDiag /> <SignupDiag />
+                                            </div>
+
+                                }
+
                             </Toolbar>
                         </AppBar>
                     </Box>

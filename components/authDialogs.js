@@ -1,14 +1,12 @@
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import {useState} from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
-
-const auth = getAuth();
+import {auth} from "../firebase/clientApp";
 
 export function LoginDiag(){
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [user, setUser] = useState({})
 
     const handleClose = () => {
         setOpen(false);
@@ -16,14 +14,9 @@ export function LoginDiag(){
 
     const login = event => {
         event.preventDefault();
-        signInWithEmailAndPassword(auth, email, password).then(
-            (userCredential) => {
-                setUser(userCredential.user)
-                handleClose();
-            }).catch((error) => {
+        signInWithEmailAndPassword(auth, email, password).then(() => handleClose()).catch((error) => {
                 console.log("An error occurred while logging in: " + error)
         })
-        console.log("Logged in user: " + user);
     }
 
     return (
@@ -72,7 +65,6 @@ export function SignupDiag(){
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [user, setUser] = useState({});
 
     const handleClose = () => {
         setOpen(false);
@@ -80,11 +72,7 @@ export function SignupDiag(){
 
     const signup = event => {
         event.preventDefault();
-        createUserWithEmailAndPassword(auth, email, password).then(
-            (userCredential) => {
-                setUser(userCredential.user)
-                handleClose();
-            }).catch((error) => {
+        createUserWithEmailAndPassword(auth, email, password).then(() => handleClose()).catch((error) => {
             console.log("An error occurred while signing up: " + error)
         })
     }
