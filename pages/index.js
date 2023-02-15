@@ -22,7 +22,17 @@ async function deleteEntry(id) {
 
 function BookingDiag(args) {
     const [open, setOpen] = useState(false);
-    const [booking, setBooking] = useState({
+
+    const [booking, setBooking] = args.edit ? useState({
+       data:{
+           id: args.booking.data.id,
+           seeker: args.booking.data.seeker,
+           giver: args.booking.data.giver,
+           date: args.booking.data.date,
+           totalamt: args.booking.data.totalamt
+       },
+       id: args.booking.id
+    }) : useState({
         data: {
             id: null,
             seeker: null,
@@ -44,6 +54,9 @@ function BookingDiag(args) {
         await args.refresh();
     };
 
+    const handleEdit = event => {
+        event.preventDefault();
+    }
     const handleAdd = event => {
         event.preventDefault();
         addToDB().then(() => handleClose());
@@ -84,18 +97,20 @@ function BookingDiag(args) {
                 </Button>)
             }
             <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>New Booking</DialogTitle>
-                <form onSubmit={handleAdd}>
+                <form onSubmit={args.edit ? handleEdit : handleAdd}>
+                <DialogTitle>{args.edit ? "Edit Booking" : "New Booking"}</DialogTitle>
                     <DialogContent>
-                        <DialogContentText>
-                            Create a new booking to manage here, and add it to the database
+                        <DialogContentText>{args.edit ? "Edit an existing booking here" :
+                            "Create a new booking to manage here, and add it to the database"}
                         </DialogContentText>
+                        <br/>
                         <TextField
                             autoFocus
                             margin="dense"
                             id="id"
                             label="ID"
                             type="number"
+                            value={booking.data.id ?? ''}
                             fullWidth
                             required
                             onChange={e => {
@@ -113,6 +128,7 @@ function BookingDiag(args) {
                             id="seeker"
                             label="Seeker"
                             type="text"
+                            value={booking.data.seeker ?? ''}
                             fullWidth
                             required
                             onChange={e => {
@@ -130,6 +146,7 @@ function BookingDiag(args) {
                             id="giver"
                             label="Giver"
                             type="text"
+                            value={booking.data.giver ?? ''}
                             fullWidth
                             required
                             onChange={e => {
@@ -147,6 +164,7 @@ function BookingDiag(args) {
                             id="date"
                             label="Date"
                             type="date"
+                            value={booking.data.date ?? ''}
                             fullWidth
                             required
                             onChange={e => {
@@ -154,7 +172,7 @@ function BookingDiag(args) {
                                     ...booking,
                                     data: {
                                         ...booking.data,
-                                        date: new Date(e.target.value).toDateString()
+                                        date: e.target.value
                                     }
                                 });
                             }}
@@ -164,6 +182,7 @@ function BookingDiag(args) {
                             id="totalamt"
                             label="Total Amount"
                             type="number"
+                            value={booking.data.totalamt ?? ''}
                             fullWidth
                             required
                             // Had to do it like this, apparently the built-in step isn't working?
@@ -182,7 +201,7 @@ function BookingDiag(args) {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleClose}>Cancel</Button>
-                        <Button type="submit">Add</Button>
+                        <Button type="submit">{args.edit ? "Edit" :"Add"}</Button>
                     </DialogActions>
                 </form>
             </Dialog>
@@ -250,13 +269,13 @@ export default function Home() {
                                         </TableCell>
                                         <TableCell align={"right"}>{bk.data.seeker}</TableCell>
                                         <TableCell align={"right"}>{bk.data.giver}</TableCell>
-                                        <TableCell align={"right"}>{bk.data.date}</TableCell>
+                                        <TableCell align={"right"}>{new Date(bk.data.date).toDateString()}</TableCell>
                                         <TableCell align={"right"}>{bk.data.totalamt}</TableCell>
                                         <TableCell align={"right"}>
                                             <Grid container spacing={2}>
                                                 <Grid item xs ={4}/>
                                                 <Grid item xs={4}>
-                                                    <BookingDiag refresh={getBookings} edit={true}/>
+                                                    <BookingDiag refresh={getBookings} edit={true} booking={bk}/>
                                                 </Grid>
                                                 <Grid item xs={4}>
                                                     <IconButton aria-label="delete" onClick={async () => {
