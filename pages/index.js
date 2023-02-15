@@ -3,7 +3,7 @@ import styles from '../styles/Home.module.css';
 import {
     AppBar,
     Box,
-    Button, Grid,
+    Grid,
     IconButton,
     Paper,
     Table,
@@ -22,6 +22,7 @@ import {firestore} from "../firebase/clientApp";
 import {BookingDiag} from "../components/bookingDialog";
 import {collection, doc, getDocs, deleteDoc} from "@firebase/firestore";
 import {useEffect, useState} from "react";
+import {LoginDiag, SignupDiag} from "../components/authDialogs";
 
 async function deleteEntry(id) {
     await deleteDoc(doc(firestore, 'bookings', id));
@@ -75,8 +76,8 @@ export default function Home() {
                                     Bookings!
                                 </Typography>
                                 <BookingDiag refresh={getBookings} edit={false}/>
-                                <Button color="secondary">Login</Button>
-                                <Button color="secondary">Sign Up</Button>
+                                <LoginDiag />
+                                <SignupDiag />
                             </Toolbar>
                         </AppBar>
                     </Box>
