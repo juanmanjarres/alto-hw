@@ -19,7 +19,7 @@ import {
 } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {firestore} from "../firebase/clientApp";
-import {BookingDiag} from "./bookingDialog";
+import {BookingDiag} from "../components/bookingDialog";
 import {collection, doc, getDocs, deleteDoc} from "@firebase/firestore";
 import {useEffect, useState} from "react";
 
