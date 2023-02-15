@@ -50,13 +50,19 @@ export default function Home() {
     });
 
     const getBookings = async () => {
-        const bookingsQuery = await getDocs(bookingsCollection)
-        const res = [];
-        bookingsQuery.forEach((doc) => {
-            res.push({data: doc.data(), id: doc.id})
-        })
-        console.log(JSON.stringify(res[0]))
-        setBookings(res)
+        try {
+            const res = [];
+            if(loggedIn) {
+                const bookingsQuery = await getDocs(bookingsCollection)
+                bookingsQuery.forEach((doc) => {
+                    res.push({data: doc.data(), id: doc.id})
+                })
+            }
+            setBookings(res)
+        } catch (e) {
+            console.log(e)
+            setBookings([])
+        }
     }
 
     const handleSignOut = () => {
@@ -69,7 +75,6 @@ export default function Home() {
     }
 
     useEffect(() => {
-        getBookings();
         onAuthStateChanged(auth, (returnedUser) => {
             if(returnedUser){
                 //User is signed in
@@ -82,6 +87,7 @@ export default function Home() {
                 console.log("User signed out")
             }
         })
+        getBookings();
     }, [])
 
     return (
@@ -140,7 +146,8 @@ export default function Home() {
                                         <TableCell align={"right"}>{bk.data.seeker}</TableCell>
                                         <TableCell align={"right"}>{bk.data.giver}</TableCell>
                                         <TableCell align={"right"}>{new Date(bk.data.date).toDateString()}</TableCell>
-                                        <TableCell align={"right"}>{bk.data.totalamt}</TableCell>
+                                        <TableCell align={"right"}>{"$ " + parseFloat(bk.data.totalamt).toFixed(2)}
+                                        </TableCell>
                                         <TableCell align={"right"}>
                                             <Grid container spacing={2}>
                                                 <Grid item xs ={4}/>

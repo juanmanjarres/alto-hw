@@ -65,6 +65,7 @@ export function SignupDiag(){
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confPassword, setConfPassword] = useState('');
 
     const handleClose = () => {
         setOpen(false);
@@ -72,6 +73,9 @@ export function SignupDiag(){
 
     const signup = event => {
         event.preventDefault();
+        if(!(password === confPassword)){
+            return;
+        }
         createUserWithEmailAndPassword(auth, email, password).then(() => handleClose()).catch((error) => {
             console.log("An error occurred while signing up: " + error)
         })
@@ -117,9 +121,10 @@ export function SignupDiag(){
                         required
                         fullWidth
                         onChange={
-                            //TODO check that the passwords are the same
-                            event => setPassword(event.target.value)
+                            event => setConfPassword(event.target.value)
                         }
+                        error={confPassword !== password}
+                        helperText={(confPassword !== password) ? "Passwords must match" : ''}
                     />
                     </DialogContent>
                     <DialogActions>
