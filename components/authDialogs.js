@@ -3,7 +3,7 @@ import {useState} from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {auth} from "../firebase/clientApp";
 
-export function LoginDiag(){
+export function LoginDiag(args){
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -14,7 +14,11 @@ export function LoginDiag(){
 
     const login = event => {
         event.preventDefault();
-        signInWithEmailAndPassword(auth, email, password).then(() => handleClose()).catch((error) => {
+        signInWithEmailAndPassword(auth, email, password).then(() =>
+            {
+                handleClose();
+                args.refresh();
+            }).catch((error) => {
                 console.log("An error occurred while logging in: " + error)
         })
     }
@@ -61,7 +65,7 @@ export function LoginDiag(){
     )
 }
 
-export function SignupDiag(){
+export function SignupDiag(args){
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -76,7 +80,10 @@ export function SignupDiag(){
         if(!(password === confPassword)){
             return;
         }
-        createUserWithEmailAndPassword(auth, email, password).then(() => handleClose()).catch((error) => {
+        createUserWithEmailAndPassword(auth, email, password).then(() => {
+            handleClose();
+            args.refresh();
+        }).catch((error) => {
             console.log("An error occurred while signing up: " + error)
         })
     }

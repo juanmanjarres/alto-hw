@@ -74,13 +74,14 @@ export default function Home() {
         });
     }
 
-    useEffect(() => {
+    useEffect( () => {
         onAuthStateChanged(auth, (returnedUser) => {
-            if(returnedUser){
+            if (returnedUser) {
                 //User is signed in
                 setUser(returnedUser)
                 setLoggedIn(true)
                 console.log("uid: " + JSON.stringify(returnedUser.uid))
+                getBookings();
             } else {
                 setUser({})
                 setLoggedIn(false)
@@ -88,7 +89,7 @@ export default function Home() {
             }
         })
         getBookings();
-    }, [])
+    }, [loggedIn])
 
     return (
         <div className={styles.container}>
@@ -105,12 +106,14 @@ export default function Home() {
                                 <Typography color="black" variant="h5" component="div" sx ={{ flexGrow :  1 }}>
                                     Bookings!
                                 </Typography>
-                                <BookingDiag refresh={getBookings} edit={false}/>
+                                { loggedIn?
+                                    <BookingDiag refresh={getBookings} edit={false}/> : <Box/>
+                                }
                                 {
                                     loggedIn ?
                                         <Button color="secondary" onClick={handleSignOut}>Sign Out</Button> :
                                             <div style={{ display:"flex" }}>
-                                                <LoginDiag /> <SignupDiag />
+                                                <LoginDiag refresh={getBookings}/> <SignupDiag refresh={getBookings}/>
                                             </div>
 
                                 }
@@ -120,7 +123,8 @@ export default function Home() {
                     </Box>
                 </ThemeProvider>
             </header>
-            <main>
+            <main>{
+                loggedIn ?
                 <Grid item xs={12}>
                 <TableContainer component={Paper}>
                     <Table aria-label="simple table">
@@ -170,6 +174,8 @@ export default function Home() {
                     </Table>
                 </TableContainer>
                 </Grid>
+                    : <h1>Please log in to see or modify bookings</h1>
+            }
             </main>
 
             <footer>
